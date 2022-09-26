@@ -1,5 +1,17 @@
 # DESC
-DESC is a DErived Sheaf Calculator: a tool for working with (co)chains in derived categories of sheaves over finite posets. The supported operations include computing the minimal injective resolution of a constant sheaf and star/shriek pushforwards/pullbacks of injective (co)chains through monotonic maps.
+DESC is a DErived Sheaf Calculator: a tool for working with (co)chains in derived categories of sheaves over finite posets. The supported operations include computing the minimal injective resolution of a constant sheaf and star/shriek pushforwards/pullbacks of injective (co)chains through monotonic maps. The code is based on [[1]](BrDr), where you can find all necessary theory as well as detailed description of the algorithms used.
+
+## How to use
+
+The main code is in the file `code/desc.py`. The `main()` method contains a sample code showing how to compute part of the examples presented in [[1]](BrDr), so it can be ran directly from terminal with `python3 code/desc.py`, but the recommended use is to create a jupyter notebook, and import `desc.py` in it.
+
+## References
+<a id="BrDr">[1]</a> 
+Adam Brown and Ondřej Draganov.
+Discrete Microlocal Morse Theory.
+2022.
+_ArXiv link to be added soon_
+
 
 
 
