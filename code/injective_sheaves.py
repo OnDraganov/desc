@@ -1,7 +1,6 @@
 #!python3
 
 import itertools
-import numpy as np
 import tabulate
 
 import linear_algebra_Z2 as linalg

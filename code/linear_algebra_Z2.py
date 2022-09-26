@@ -1,7 +1,6 @@
 #!python3
 
 import itertools
-import numpy as np
 
 def reduce_matrix(matrix, sorting_function = None):
     """Given matrix D in a row-dictionary form (key=row label, value=set of column labels),
