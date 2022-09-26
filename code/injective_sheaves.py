@@ -279,11 +279,6 @@ class ChainComplex:
         return string[:-len(last_arrow)]
 
 def main():
-
-    print("TEST")
-    print(f"pt = {ChainComplex.constant_complex_on_point().str_chain()}")
-    print()
-
     print("The sample example from the paper:")
 
     # define simplicial complexes (given list of maximal simplices)
@@ -368,6 +363,8 @@ def main():
             row.append( cplx.pullback( PosetMapInclusion(Z, cplx.poset)).str_hypercohomology() )
         table.append(row)
 
+    print()
+    print("The table of hypercohomologies for maps g and h as presented in Examples section of the paper:")
     print(tabulate.tabulate(
         table,
         headers=["dim H^p(-)"]+sorted(morse.keys()),
