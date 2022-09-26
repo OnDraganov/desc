@@ -3,7 +3,7 @@ DESC is a DErived Sheaf Calculator: a tool for working with (co)chains in derive
 
 
 
-======================================================================
+--------------------------------------------------
 
 Copyright ©2022. Institute of Science and Technology Austria (IST Austria). All Rights Reserved.
 
