@@ -14,7 +14,7 @@ We plan to soon add a jupyter notebook to the repository with several use-cases 
 Adam Brown and Ondřej Draganov.
 Discrete Microlocal Morse Theory.
 2022.
-_ArXiv link to be added soon_
+<https://arxiv.org/abs/2209.14993>
 
 
 
