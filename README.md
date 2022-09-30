@@ -3,7 +3,7 @@ DESC is a DErived Sheaf Calculator: a tool for working with (co)chains in derive
 
 ## How to use
 
-The main code is in the file `code/desc.py`. The `main()` method contains a sample code showing how to compute part of the examples presented in [[1]](BrDr), so it can be ran directly from terminal with `python3 code/desc.py`, but the recommended use is to create a jupyter notebook, and import `desc.py` in it.
+The main code is in the file `src/desc.py`. The `main()` method contains a sample code showing how to compute part of the examples presented in [[1]](BrDr), so it can be ran directly from terminal with `python3 src/desc.py`, but the recommended use is to create a jupyter notebook, and import `desc.py` in it.
 
 ## Remarks
 
