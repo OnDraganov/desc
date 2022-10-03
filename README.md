@@ -7,9 +7,9 @@ The main code is in the file `src/desc.py`. The `main()` method contains a sampl
 
 Currently all computations are done over the two element field Z_2.
 
-## Remarks
+## Manual / Examples
 
-We plan to soon add a jupyter notebook to the repository with several use-cases and interesting examples that can be computed with the tool -- it will serve both as a manual and as a demonstration of DESC.
+To learn more about how to use DESC, see the jupyter notebook `examples.ipynb`. It contains several use-cases and interesting examples that can be computed with the tool -- it serves both as a user guide and as a demonstration of what can be computed with DESC.
 
 ## References
 <a id="BrDr">[1]</a> 
