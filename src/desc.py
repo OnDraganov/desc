@@ -259,7 +259,7 @@ class ChainComplex:
         """Return minimal ChainComplex quasi-isomorphic to self.
         [Is currently implemented in a very non-optimised way: computes pullback via identity]
         """
-        return pullback(self, PosetMapIdentity(self.poset))
+        return self.pullback(PosetMapIdentity(self.poset))
 
     def hypercohomology(self):
         """Compute Betti numbers of the hypercohomology of the complex, return as dictionary."""
