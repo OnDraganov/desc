@@ -87,13 +87,24 @@ class LabeledMatrix:
         self.matrix[(label, new_sublabel)] = row
         return label, new_sublabel
 
-    def print_matrix(self, title="", form="full"):
+    def print_matrix(self, title="", form="short"):
+        '''Print labeled matrix
+        Keyword arguments:
+            title -- string to be printed in position (0,0)
+            form  -- `full` or `short`, full prints labeles and sublabeles,
+                        short only prints labeles. For example if we have
+                        two rows labeled by pi, then full prints labels (pi,0) and (pi,1),
+                        and short only prints pi for both rows. (default short)'''
         cols = [element for element in self.poset if element in self.column_labels]
         rows = [element for element in self.poset if element in self.row_labels]
-        table = [[title] + sum([[(collab, sublab) for sublab in sorted(self.column_labels[collab])] for collab in cols], start=[])]
+        column_labels = sum([[ (collab, sublab) for sublab in sorted(self.column_labels[collab])] 
+                                                for collab in cols],
+                            start=[])
+        table = [[title] + [(self.poset.str_element(collab), sublab) for collab,sublab in column_labels]]
         for row in rows:
             for sublab in self.row_labels[row]:
-                table.append( [(row, sublab)] + [1 if col in self.matrix[(row, sublab)] else 0 for col in table[0][1:]] )
+                table.append( [(self.poset.str_element(row), sublab)] +
+                        [1 if col in self.matrix[(row, sublab)] else 0 for col in column_labels] )
         if form=="short":
             table[0] = [table[0][0]] + [el[0] for el in table[0][1:]]
             for i in range(1,len(table)):

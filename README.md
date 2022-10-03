@@ -5,6 +5,8 @@ DESC is a DErived Sheaf Calculator: a tool for working with (co)chains in derive
 
 The main code is in the file `src/desc.py`. The `main()` method contains a sample code showing how to compute part of the examples presented in [[1]](BrDr), so it can be ran directly from terminal with `python3 src/desc.py`, but the recommended use is to create a jupyter notebook, and import `desc.py` in it.
 
+Currently all computations are done over the two element field Z_2.
+
 ## Remarks
 
 We plan to soon add a jupyter notebook to the repository with several use-cases and interesting examples that can be computed with the tool -- it will serve both as a manual and as a demonstration of DESC.
