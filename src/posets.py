@@ -1,6 +1,7 @@
 #!python3
 
 import itertools
+import networkx as nx # needed for PosetDAG
 
 class PosetAbstract:
     """An abstract class all posets should be children of."""
@@ -9,7 +10,7 @@ class PosetAbstract:
         self.sort_key_dict = {el : i for i, el in enumerate(self)}
 
     def __contains__(self, element):
-        return element in self.cobnd
+        pass
 
     def __iter__(self):
         """Return generator yielding elements in non-increasing order."""
@@ -33,26 +34,33 @@ class PosetAbstract:
             raise ValueError(f"The given element is not in the poset.")
         return str(element)
     
+class PosetDAG(PosetAbstract):
+    """A generic poset given by a directed acyclic graph"""
+    def __init__(self, list_of_relations):
+        self.dag = nx.DiGraph(list_of_relations)
+        if not nx.is_directed_acyclic_graph(self.dag):
+            raise ValueError(f"The inputed relations define a graph taht is not acyclic.")
+        self.sort_key_dict = {el : i for i, el in enumerate(self.__iter__())}
 
-    # def _build_poset(self, data):
-    #     for a,b in data:
-    #         self.cobnd[a] = self.cobnd.get(a, set()) | {b}
-    #     self._check_antisymetry()
+    def __contains__(self, element):
+        return element in self.dag
 
-    # def _check_antisymetry(self):
-    #     for a in self.cobnd:
-    #         checked      = set()
-    #         to_check     = set()
-    #         to_check_new = self.cobnd[a]
-    #         while len(to_check_new)!=0:
-    #             if a in to_check_new:
-    #                 return False
-    #             to_check     = to_check_new
-    #             to_check_new = set()
-    #             for b in to_check:
-    #                 to_check_new |= self.cobnd[b] - checked
-    #                 checked.add(b)
-    #     return True
+    def __iter__(self):
+        return reversed(list(nx.lexicographical_topological_sort(self.dag)))
+
+    def sort_key(self, element):
+        return self.sort_key_dict[element]
+
+    def leq(self, a, b):
+        return b in self.star(a)
+
+    def star(self, element):
+        return nx.descendants(self.dag, element) | {element}
+
+    def str_element(self, element):
+        if element not in self.dag:
+            raise ValueError(f"The given element is not in the poset.")
+        return str(element)
 
 class PosetLinear(PosetAbstract):
     """Totally ordered set"""
@@ -72,7 +80,6 @@ class PosetLinear(PosetAbstract):
         return -self.elements_indices[element]
 
     def leq(self, a, b):
-        """Return True if a<=b."""
         if a not in self:
             raise ValueError(f"The element `{a}` is not in the poset.")
         if b not in self:
@@ -80,7 +87,6 @@ class PosetLinear(PosetAbstract):
         return self.elements_indices[a]<=self.elements_indices[b]
 
     def star(self, element):
-        """Return the star of the element as a set of elements."""
         if element not in self:
             raise ValueError(f"The element `{element}` is not in the poset.")
         return set(self.elements[self.elements_indices[element]:])
