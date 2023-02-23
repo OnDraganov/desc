@@ -11,6 +11,10 @@ Currently all computations are done over the two element field Z_2.
 
 To learn more about how to use DESC, see the jupyter notebook `examples.ipynb`. It contains several use-cases and interesting examples that can be computed with the tool -- it serves both as a user guide and as a demonstration of what can be computed with DESC.
 
+## Compatibility remarks
+
+The package uses the networkx library, but it is only needed to work with generic posets (rather than just, e.g., simplicial complexes), otherwise the class PosetDAG can be commented out together with networkx import in the file `src/posets.py`.
+
 ## References
 <a id="BrDr">[1]</a> 
 Adam Brown and Ondřej Draganov.
