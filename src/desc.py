@@ -1,10 +1,13 @@
 #!python3
 
-import itertools
+# import itertools
 import tabulate
+import networkx as nx
+import numpy as np
 
 import linear_algebra_Z2 as linalg
 from posets import PosetAbstract
+from posets import PosetDAG
 from posets import PosetLinear
 from posets import SubPoset
 from posets import SimplicialComplex
@@ -146,7 +149,12 @@ class ChainComplex:
         return gen_dict
 
     def _make_exact(self, degree, element, sorting_function=None):
-        """The MakeExact routine"""
+        """The MakeExact routine
+
+        Disclaimer
+        ==========
+        sorting_function is currently not used for anything
+        """
         element_star = self.poset.star(element)
         for new_row in self._make_exact_new_rows(
                             self.matrices[degree].submatrix_dict(element_star),
@@ -274,8 +282,10 @@ class ChainComplex:
         betti = self.hypercohomology()
         if min(betti, default=0)<0:
             negative = ",".join(str(betti.get(deg,0)) for deg in range(min(betti), 0)) + "|"
+        else:
+            negative = ""
 
-        return ",".join(str(betti.get(deg,0)) for deg in range(0, max(2, max(betti, default=0))+1 ))
+        return negative + ",".join(str(betti.get(deg,0)) for deg in range(0, max(2, max(betti, default=0))+1 ))
 
     def str_chain(self):
         generators = self.generators()
@@ -288,6 +298,136 @@ class ChainComplex:
             last_arrow = f" --{deg}--> "
             string+= last_arrow
         return string[:-len(last_arrow)]
+
+class Sheaf:
+    """A generic sheaf on a poset over Z_2.
+
+    Defining a sheaf
+    ================
+    Initialise the sheaf, and the use add_matrix(start, end, matrix) for each edge (start, end) in the Hasse diagram
+    of the poset over which the sheaf is defined. This both defines the poset and the sheaf maps.
+    If an edge implied by transitivity, i.e. not in the Hasse diagram, is added, it will be ignored.
+    The dimensions of the vector spaces are inquired from the matrices. An error is raised in the case of inconsistency.
+    Once all matrices are added, the method injective_resolution computes an injective resolution of the sheaf.
+    The resolution is not minimal, but can be minimized with the minimize() method of ChainComplex.
+
+    Remarks
+    =======
+    The poset over which the injective resolution is defined is generated as PosetDAG. If it should be defined
+    over a different representation of the same poset, it can be moved by a pushforward through a poset map
+    identifying the corresponding elements.
+
+    Disclaimer
+    ==========
+    The class is not optimised for performance in any way.
+    """
+
+    def __init__(self):
+        self.dag = nx.DiGraph()
+        self.dag_transitive_reduction = None
+        self.transitive_reduction_valid = False
+        self.dim = {}
+        self.maps = {}
+
+    def add_edge(self, start, end, matrix):
+        matrix = np.array(matrix, dtype=int) % 2
+        self.dag.add_edge(start, end)
+        self.set_dimension(start, matrix.shape[1])
+        self.set_dimension(end, matrix.shape[0])
+        self.maps[(start, end)] = matrix
+        self.transitive_reduction_valid = False # transitive reduction needs to be potentially recomputed
+
+    def set_dimension(self, vertex, dimension):
+        if vertex not in self.dim:
+            self.dim[vertex] = dimension
+            return True
+        if self.dim[vertex] != dimension:
+            raise ValueError("Matrices with conflicting dimensions are added.")
+
+    def generate_poset(self):
+        return PosetDAG(self.dag) #checks for acyclicity
+
+    def get_dag_transitive_reduction(self):
+        if not self.transitive_reduction_valid:
+            self.dag_transitive_reduction = nx.transitive_reduction(self.dag)
+            self.transitive_reduction_valid = True
+        return self.dag_transitive_reduction
+
+    def check_commutativity(self):
+        """Return True if for every a<b all paths between a and b define the same map. Else return False.
+        Note: The method is performance expensive.
+        """
+        dag = self.get_dag_transitive_reduction()
+        for a in dag:
+            for b in nx.descendants(dag, a):
+                paths = list(nx.all_simple_edge_paths(dag, a, b))
+                if len(paths) <= 1:
+                    continue
+                path_map = None
+                for path in paths:
+                    mat = self.maps[path[0]]
+                    for edge in path[1:]:
+                        mat = ( self.maps[edge] @ mat ) % 2
+                    if path_map != None and path_map != mat:
+                        return False
+        return True
+
+    def sheaf_map(self, a, b):
+        """Return the map F(a <= b) as a numpy array. Return empty matrix if not comparable"""
+        if a==b: # F(p)-->F(p) is the identity matrix
+            return np.eye(self.dim[a], dtype=int)
+        try:
+            path = nx.shortest_path(self.get_dag_transitive_reduction(), a, b)
+            path = list(zip(path[:-1],path[1:])) # path -> edge path
+        except nx.NetworkXNoPath:
+            return np.array([], dtype=int)
+        mat = self.maps[path[0]]
+        for edge in path[1:]:
+            mat = ( self.maps[edge] @ mat ) % 2
+        return mat
+
+    def injective_resolution(self, check_commutativity=True):
+        """Return an injective resolution of the sheaf. By default a commutativity check is performed, but
+        this can be suppresed for performance reasons by passing `check_commutativity=False`.
+        """
+        if check_commutativity and not self.check_commutativity():
+            raise ValueError("The inputed matrices do not define a sheaf -- a commutativity clash found.")
+        cplx = ChainComplex(self.generate_poset())
+
+        # define I_0
+        for p in cplx.poset:
+            for _ in range(self.dim[p]): # there is dim(F(p)) summands [p] in I_0
+                cplx.add_row(-1, p, set())
+
+        # compute cplx.matrices[0]: I_0 --> I_1 (mimics ChainComplex._makeExact)
+        for p in cplx.poset:
+            p_star = cplx.poset.star(p)
+
+            # The matrix F(p) --> I_0(p) has dim(F(p)) columns and sum(dim(F(q)), p<=q) rows;
+            # it comprises of a column of matrices F(p<q), one for each q>=p
+            column_labels = [(p, i) for i in range(self.dim[p])]
+            matrix_F_to_I0 = {}
+            for q in p_star:
+                npmat = self.sheaf_map(p,q)
+                for i, row_sublab in enumerate(sorted(cplx.matrices[0].column_labels.get(q, set()))):
+                    matrix_F_to_I0[(q,row_sublab)] = {col_lab for j, col_lab in enumerate(column_labels) if npmat[i,j]}
+
+            for new_row in cplx._make_exact_new_rows(
+                                cplx.matrices[0].submatrix_dict(p_star),
+                                matrix_F_to_I0):
+                cplx.add_row(0, p, new_row)
+
+        # compute the rest of the resolution
+        deg = 1
+        while cplx.matrices.get(deg, None):
+            for p in cplx.poset:
+                cplx._make_exact(deg, p)
+            deg+= 1
+
+        return cplx
+
+
+
 
 def main():
     print("The sample example from the paper:")

@@ -13,7 +13,11 @@ To learn more about how to use DESC, see the jupyter notebook `examples.ipynb`. 
 
 ## Compatibility remarks
 
-The package uses the networkx library, but it is only needed to work with generic posets (rather than just, e.g., simplicial complexes), otherwise the class PosetDAG can be commented out together with networkx import in the file `src/posets.py`.
+The `numpy` library is needed only for class `Sheaf` in `src/desc.py`, which is only needed to explicitly define a generic sheaf (rather than just starting with a constant sheaf and using pushforward/pullback vectors). 
+
+The `networkx` library is needed to work with generic posets (rather than just, e.g., simplicial complexes), and general sheaves. The import can dropped if the following classed are also dropped:
+- class `PosetDAG` in `src/posets.py`
+- class `Sheaf` in `src/desc.py`
 
 ## References
 <a id="BrDr">[1]</a> 

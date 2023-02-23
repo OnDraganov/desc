@@ -41,7 +41,7 @@ class PosetDAG(PosetAbstract):
         if nx.is_directed_acyclic_graph(self.dag):
             self.dag = nx.transitive_reduction(self.dag)
         else:
-            raise ValueError(f"The inputed relations define a graph taht is not acyclic.")
+            raise ValueError(f"The inputed relations define a graph that is not acyclic.")
         self.sort_key_dict = {el : i for i, el in enumerate(self.__iter__())}
 
     def __contains__(self, element):
@@ -54,7 +54,7 @@ class PosetDAG(PosetAbstract):
         return self.sort_key_dict[element]
 
     def leq(self, a, b):
-        return b in self.star(a)
+        return nx.has_path(self.dag, a, b)
 
     def star(self, element):
         return nx.descendants(self.dag, element) | {element}
