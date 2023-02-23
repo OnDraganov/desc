@@ -386,7 +386,7 @@ class Sheaf:
             mat = ( self.maps[edge] @ mat ) % 2
         return mat
 
-    def injective_resolution(self, check_commutativity=True):
+    def injective_resolution(self, check_commutativity=True, minimize=False):
         """Return an injective resolution of the sheaf. By default a commutativity check is performed, but
         this can be suppresed for performance reasons by passing `check_commutativity=False`.
         """
@@ -424,7 +424,10 @@ class Sheaf:
                 cplx._make_exact(deg, p)
             deg+= 1
 
-        return cplx
+        if minimize:
+            return cplx.minimize()
+        else:
+            return cplx
 
 
 
