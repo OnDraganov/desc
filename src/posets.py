@@ -38,7 +38,9 @@ class PosetDAG(PosetAbstract):
     """A generic poset given by a directed acyclic graph"""
     def __init__(self, list_of_relations):
         self.dag = nx.DiGraph(list_of_relations)
-        if not nx.is_directed_acyclic_graph(self.dag):
+        if nx.is_directed_acyclic_graph(self.dag):
+            self.dag = nx.transitive_reduction(self.dag)
+        else:
             raise ValueError(f"The inputed relations define a graph taht is not acyclic.")
         self.sort_key_dict = {el : i for i, el in enumerate(self.__iter__())}
 
