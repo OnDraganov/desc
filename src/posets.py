@@ -65,7 +65,7 @@ class PosetDAG(PosetAbstract):
         return str(element)
 
     def get_opposite(self):
-        '''Return the opposite (fliped) poset.'''
+        '''Return the opposite (flipped) poset.'''
         return PosetDAG(self.dag.reverse(copy=True))
 
 class PosetLinear(PosetAbstract):
@@ -98,7 +98,7 @@ class PosetLinear(PosetAbstract):
         return set(self.elements[self.elements_indices[element]:])
 
     def get_opposite(self):
-        '''Return the opposite (fliped) poset.'''
+        '''Return the opposite (flipped) poset.'''
         return PosetLinear(list(reversed(self.elements)))
 
 
@@ -204,11 +204,11 @@ class SimplicialComplex(PosetAbstract):
                 self.cobnd[t].add(s)
 
     def get_opposite(self):
-        '''Return the opposite (fliped) poset.'''
+        '''Return the opposite (flipped) poset.'''
         return SimplicialComplexOp(self.bnd)
 
 class SimplicialComplexOp(SimplicialComplex):
-    """The opposite (fliped) poset of a simplicial complex."""
+    """The opposite (flipped) poset of a simplicial complex."""
     def __init__(self, data):
         super().__init__(data)
 
