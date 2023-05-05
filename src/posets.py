@@ -37,7 +37,7 @@ class PosetAbstract:
 class PosetDAG(PosetAbstract):
     """A generic poset given by a directed acyclic graph"""
     def __init__(self, list_of_relations):
-        self.dag = nx.DiGraph(list_of_relations)
+        self.dag = nx.DiGraph(list_of_relations) #list_of_relations can also be a nx graph data
         if nx.is_directed_acyclic_graph(self.dag):
             self.dag = nx.transitive_reduction(self.dag)
         else:
@@ -64,8 +64,12 @@ class PosetDAG(PosetAbstract):
             raise ValueError(f"The given element is not in the poset.")
         return str(element)
 
+    def get_opposite(self):
+        '''Return the opposite (fliped) poset.'''
+        return PosetDAG(self.dag.reverse(copy=True))
+
 class PosetLinear(PosetAbstract):
-    """Totally ordered set"""
+    """Totally ordered set. Constructed from a list of elements in increasing order."""
     def __init__(self, list_of_elements):
         if len(list_of_elements)!=len(set(list_of_elements)):
             raise ValueError("There are repeated elements in the list of elements provided.")
@@ -92,6 +96,11 @@ class PosetLinear(PosetAbstract):
         if element not in self:
             raise ValueError(f"The element `{element}` is not in the poset.")
         return set(self.elements[self.elements_indices[element]:])
+
+    def get_opposite(self):
+        '''Return the opposite (fliped) poset.'''
+        return PosetLinear(list(reversed(self.elements)))
+
 
 class SubPoset(PosetAbstract):
     """A wrapper class restricting a poset to its subset."""
@@ -193,6 +202,33 @@ class SimplicialComplex(PosetAbstract):
         for s in self.bnd:
             for t in self.bnd[s]:
                 self.cobnd[t].add(s)
+
+    def get_opposite(self):
+        '''Return the opposite (fliped) poset.'''
+        return SimplicialComplexOp(self.bnd)
+
+class SimplicialComplexOp(SimplicialComplex):
+    """The opposite (fliped) poset of a simplicial complex."""
+    def __init__(self, data):
+        super().__init__(data)
+
+    def __iter__(self):
+        return (s for s in sorted(self.bnd, key=lambda x: (len(x), x), reverse=False))
+
+    def leq(self, a, b):
+        if a not in self:
+            raise ValueError(f"The element `{a}` is not in the poset.")
+        if b not in self:
+            raise ValueError(f"The element `{b}` is not in the poset.")
+        return set(a).issuperset(set(b))
+
+    def star(self, element):
+        if element not in self:
+            raise ValueError(f"The element `{element}` is not in the poset.")
+        levels = [{element}]
+        while len(levels[-1])!=0:
+            levels.append(set().union(*[self.bnd[s] for s in levels[-1]]))
+        return set().union(*levels)
 
 class PosetMappingCylinder(PosetAbstract):
     """Mapping cylinder of a monotonic map."""
