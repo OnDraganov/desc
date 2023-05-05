@@ -295,9 +295,13 @@ class ChainComplex:
             string+= " + ".join(
                         f"{self.poset.str_element(gen)}^{generators[deg][gen]}"
                         for gen in sorted(generators[deg], key=self.poset.sort_key))
-            last_arrow = f" --{deg}--> "
+            last_arrow = f" --{deg if deg>=0 else f'({deg})'}--> "
             string+= last_arrow
         return string[:-len(last_arrow)]
+
+    def shift(self, shift):
+        """Shifts the complex by a given value. E.g. shift=2 will put degree 1 to degree 3."""
+        self.matrices = { deg+shift : matrix for deg, matrix in self.matrices.items()}
 
 class Sheaf:
     """A generic sheaf on a poset over Z_2.
