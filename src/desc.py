@@ -264,7 +264,7 @@ class ChainComplex:
             new_cplx.matrices[deg] = mat.submatrix(subposet_elements, poset=subposet)
         return new_cplx
 
-    def truncate(self,degree,minimize=True):
+    def truncate(self, degree, minimize=True):
         """ Compute the truncation of a complex """
         poset = self.poset
         trunc_cmplx = ChainComplex(poset)
@@ -278,6 +278,13 @@ class ChainComplex:
             return trunc_cmplx.minimize()
         else:
             return trunc_cmplx
+
+    def _truncate_alternative(self, degree):
+        truncated_complex = ChainComplex(self.poset)
+        truncated_complex.matrices = {deg : mat.submatrix(self.poset) for deg, mat in sorted(self.matrices.items()) if deg < degree} #copy the matrices
+        if degree in self.matrices:
+            truncated_complex.matrices[degree] = self.matrices[degree].submatrix(rows=[], columns=self.poset) #empty matrix, but with all the column labels
+        return truncated_complex.pullback(PosetMapIdentity(truncated_complex.poset))
 
     def minimize(self):
         """Return minimal ChainComplex quasi-isomorphic to self.
@@ -306,7 +313,7 @@ class ChainComplex:
         generators = self.generators()
         string = ""
         last_arrow = ""
-        for deg in range(min(generators), max(generators)+1):
+        for deg in range(min(generators, default=0), max(generators, default=-1)+1):
             string+= " + ".join(
                         f"{self.poset.str_element(gen)}^{generators[deg][gen]}"
                         for gen in sorted(generators[deg], key=self.poset.sort_key))
