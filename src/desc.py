@@ -279,12 +279,22 @@ class ChainComplex:
         else:
             return trunc_cmplx
 
-    def _truncate_alternative(self, degree):
+    def _truncate_new(self, degree, minimize=True):
         truncated_complex = ChainComplex(self.poset)
         truncated_complex.matrices = {deg : mat.submatrix(self.poset) for deg, mat in sorted(self.matrices.items()) if deg < degree} #copy the matrices
         if degree in self.matrices:
             truncated_complex.matrices[degree] = self.matrices[degree].submatrix(rows=[], columns=self.poset) #empty matrix, but with all the column labels
-        return truncated_complex.pullback(PosetMapIdentity(truncated_complex.poset))
+
+        # Make everything exact, starting at the cut-off degree
+        while truncated_complex.matrices.get(degree, None):
+            for p in truncated_complex.poset:
+                truncated_complex._make_exact(degree, p)
+            degree += 1
+
+        if minimize:
+            return truncated_complex.minimize()
+        else:
+            return truncated_complex
 
     def minimize(self):
         """Return minimal ChainComplex quasi-isomorphic to self.
