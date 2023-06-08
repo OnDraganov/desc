@@ -315,6 +315,13 @@ class PosetMap:
     def __getitem__(self, key):
         return self.map_dict[key]
 
+    def preimage(self, codomain_subset):
+    """Returns a subposet of the domain that gets mapped to the codomain_subset"""
+        return SubPoset(
+                    self,
+                    {element for element in self.dom if self[element] in codomain_subset}
+               )
+
 class PosetMapConstant(PosetMap):
     """Constant map sending all elements to a point"""
     def __init__(self, domain, codomain):
@@ -381,21 +388,17 @@ class SimplicialMap(PosetMap):
             raise ValueError(f"The element `{key}` is not in the domain of the map.")
         return tuple(sorted({self.vertex_map_dict.get(v,v) for v in key}))
 
-    def inverse_image(self, subcomplex):
+    def preimage(self, codomain_subset):
         """
-        Returns the inverse image of a given subcomplex under the simplicial map.
+        Returns the preimage of a given subcomplex under the simplicial map.
 
         Arguments:
-        - subcomplex: a SimplicialComplex object that is a subcomplex of the codomain of the simplicial map
+        - subcomplex: a SimplicialComplex object or a set that is a subcomplex of the codomain of the simplicial map
 
         Returns:
         - a SimplicialComplex object that is the inverse image of the given subcomplex under the simplicial map
         """
-        inverse = set()
-        for simplex in self.dom:
-            if self[simplex] in subcomplex:
-                inverse = inverse.union({simplex})
-        return SimplicialComplex(inverse)
+        return SimplicialComplex({simplex for simplex in self.dom if simplex in codomain_subset})
 
 def main():
     pass
