@@ -265,28 +265,11 @@ class ChainComplex:
         return new_cplx
 
     def truncate(self, degree, minimize=True):
-        """ Compute the truncation of a complex """
-        poset = self.poset
-        trunc_cmplx = ChainComplex(poset)
-        for deg, mat in sorted(self.matrices.items()):
-            trunc_cmplx.matrices[deg] = mat
-        while trunc_cmplx.matrices.get(degree, None):
-            for p in trunc_cmplx.poset:
-                trunc_cmplx._make_exact(degree, p)
-            degree += 1
-        if minimize:
-            return trunc_cmplx.minimize()
-        else:
-            return trunc_cmplx
-
-    def _truncate_new(self, degree, minimize=True):
+        """ Return the truncation of a complex """
         truncated_complex = ChainComplex(self.poset)
-        truncated_complex.matrices = {deg : mat.submatrix(self.poset) for deg, mat in sorted(self.matrices.items()) if deg < degree} #copy the matrices
-        if degree in self.matrices:
-            truncated_complex.matrices[degree] = self.matrices[degree].submatrix(rows=[], columns=self.poset) #empty matrix, but with all the column labels
-
-        # Make everything exact, starting at the cut-off degree
-        while truncated_complex.matrices.get(degree, None):
+        truncated_complex.matrices = {deg : mat.submatrix(self.poset) for deg, mat in sorted(self.matrices.items())} #copy the matrices
+        max_non_zero_degree = max(truncated_complex.matrices.keys(), default=degree)
+        while truncated_complex.matrices.get(degree, None) or degree <= max_non_zero_degree: # Make everything exact, starting at the cut-off degree
             for p in truncated_complex.poset:
                 truncated_complex._make_exact(degree, p)
             degree += 1
