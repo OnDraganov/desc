@@ -139,7 +139,7 @@ class SimplicialComplex(PosetAbstract):
         self.cobnd = {}
         self._build_complex(data)
         self._add_cobnd()
-        self._simple_print = True if all(len(str(el[0]))==1 for el in self.dim[0]) else False
+        self._simple_print = True if all(len(str(el[0]))==1 for el in self.dim.get(0,[])) else False
         super().__init__()
 
     def __len__(self):
@@ -185,13 +185,13 @@ class SimplicialComplex(PosetAbstract):
             raise TypeError(f"Cannot build complex from type {type(data)}.")
 
     def _build_complex_list(self, simplex_list):
-        dim = max(len(s)-1 for s in simplex_list)
+        dim = max((len(s)-1 for s in simplex_list), default=-1)
         self.dim = {d : set(tuple(sorted(s)) for s in simplex_list if len(s)-1==d) for d in range(dim+1)}
         for d in range(dim, 0, -1):
             for s in self.dim[d]:
                 self.bnd[s] = set(itertools.combinations(s, d))
             self.dim[d-1] = self.dim[d-1].union(*[self.bnd[s] for s in self.dim[d]])
-        for v in self.dim[0]:
+        for v in self.dim.get(0,[]):
             self.bnd[v] = set()
 
     def _build_complex_dict(self, simplex_dict):
@@ -316,7 +316,7 @@ class PosetMap:
         return self.map_dict[key]
 
     def preimage(self, codomain_subset):
-    """Returns a subposet of the domain that gets mapped to the codomain_subset"""
+        """Returns a subposet of the domain that gets mapped to the codomain_subset"""
         return SubPoset(
                     self,
                     {element for element in self.dom if self[element] in codomain_subset}
@@ -398,7 +398,7 @@ class SimplicialMap(PosetMap):
         Returns:
         - a SimplicialComplex object that is the inverse image of the given subcomplex under the simplicial map
         """
-        return SimplicialComplex({simplex for simplex in self.dom if simplex in codomain_subset})
+        return SimplicialComplex({simplex for simplex in self.dom if self[simplex] in codomain_subset})
 
 def main():
     pass
