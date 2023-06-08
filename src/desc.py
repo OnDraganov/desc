@@ -264,6 +264,18 @@ class ChainComplex:
             new_cplx.matrices[deg] = mat.submatrix(subposet_elements, poset=subposet)
         return new_cplx
 
+    def truncate(self,deg):
+        """ Compute the truncation of a complex """
+        trunc_cmplx = ChainComplex(self.poset)
+        for dg, mt in sorted(self.matrices.items()):
+            if dg<deg:
+                trunc_cmplx.matrices[dg] = mt
+        while trunc_cmplx.matrices.get(deg, None):
+            for p in self.poset:
+                trunc_cmplx._make_exact(deg, p)
+            deg += 1
+        return trunc_cmplx
+
     def minimize(self):
         """Return minimal ChainComplex quasi-isomorphic to self.
         [Is currently implemented in a very non-optimised way: computes pullback via identity]
