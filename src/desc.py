@@ -157,8 +157,8 @@ class ChainComplex:
         """
         element_star = self.poset.star(element)
         for new_row in self._make_exact_new_rows(
-                            self.matrices[degree].submatrix_dict(element_star),
-                            self.matrices[degree-1].submatrix_dict(element_star),
+                            self.matrices[degree].submatrix_dict(element_star) if degree in self.matrices else {},
+                            self.matrices[degree-1].submatrix_dict(element_star) if degree-1 in self.matrices else {},
                             sorting_function):
             self.add_row(degree, element, new_row)
 
@@ -189,8 +189,8 @@ class ChainComplex:
         for deg, mat in sorted(self.matrices.items()):
             cone_cplx.matrices[deg-1] = mat.submatrix(rows=mat.poset, relabel=poset_cyl.relabel_codom_to_cylinder, poset=poset_cyl)
 
-        cplx_max_degree = max(self.matrices)
-        deg = min(cone_cplx.matrices)+1
+        cplx_max_degree = max(self.matrices, default=0)
+        deg = min(cone_cplx.matrices, default=0)+1
         while cone_cplx.matrices.get(deg, None) or deg<cplx_max_degree:
             for element in poset_map.dom:
                 cone_cplx._make_exact(deg, poset_cyl.relabel_dom_to_cylinder(element))
@@ -264,10 +264,14 @@ class ChainComplex:
             new_cplx.matrices[deg] = mat.submatrix(subposet_elements, poset=subposet)
         return new_cplx
 
-    def truncate(self, degree, minimize=True):
-        """ Return the truncation of a complex """
+    def truncate_from_right(self, degree, minimize=True):
+        """Return the truncation of the complex from the right,
+        removing degrees strictly larger than the given degree."""
         truncated_complex = ChainComplex(self.poset)
-        truncated_complex.matrices = {deg : mat.submatrix(self.poset) for deg, mat in sorted(self.matrices.items())} #copy the matrices
+        truncated_complex.matrices = {
+                deg : mat.submatrix(self.poset)
+                for deg, mat in sorted(self.matrices.items())
+            } #copy the matrices
         max_non_zero_degree = max(truncated_complex.matrices.keys(), default=degree)
         while truncated_complex.matrices.get(degree, None) or degree <= max_non_zero_degree: # Make everything exact, starting at the cut-off degree
             for p in truncated_complex.poset:
@@ -278,6 +282,48 @@ class ChainComplex:
             return truncated_complex.minimize()
         else:
             return truncated_complex
+
+    def truncate_from_left(self, degree, minimize=True):
+        """Return the truncation of the complex from the left"""
+        poset_cylinder = PosetMappingCylinder(PosetMapIdentity(self.poset))
+        cone_complex = ChainComplex(poset_cylinder)
+        cone_complex.matrices = { #copy matrices starting with degree d to the top of the cylinder
+            deg : mat.submatrix(rows=mat.poset, relabel=poset_cylinder.relabel_codom_to_cylinder, poset=poset_cylinder)
+            for deg, mat in sorted(self.matrices.items())
+            if deg >= degree
+        }
+        if degree-1 in self.matrices:
+            cone_complex.matrices[degree-1] = self.matrices[degree-1].submatrix(
+                    rows=self.poset, columns=[], relabel=poset_cylinder.relabel_codom_to_cylinder, poset=poset_cylinder
+            ) # create the empty matrix going from the first zero sheaf to the first non-zero
+        if degree in cone_complex.matrices:
+            codom_matrix_degree = {label : row for label, row in cone_complex.matrices[degree].matrix.items()} #we do this copying because we change the matrix in the loop that follows
+            for label, row in codom_matrix_degree.items(): # add domain-labeled copy of the matrix in the cut-off degree
+                domanin_label = poset_cylinder.relabel_dom_to_cylinder(poset_cylinder.relabel_cylinder_to_codom(label))
+                cone_complex.add_row(degree, domanin_label, row)
+
+        complex_max_degree = max(cone_complex.matrices)
+        deg = degree+1
+        while cone_complex.matrices.get(deg, None) or deg<complex_max_degree:
+            for element in poset_cylinder.elements_dom():
+                cone_complex._make_exact(deg, element)
+            deg+= 1
+
+        truncated_complex = ChainComplex(self.poset)
+        for deg, mat in sorted(cone_complex.matrices.items()):
+            submat = mat.submatrix(
+                list(poset_cylinder.elements_dom()),
+                relabel=poset_cylinder.relabel_cylinder_to_dom,
+                poset=truncated_complex.poset)
+            if submat:
+                truncated_complex.matrices[deg-1] = submat
+
+        if minimize: # we might get minimal already because of the construction -- should check the argument for why pullback is minimal
+            return truncated_complex.minimize()
+        else:
+            return truncated_complex
+
+
 
     def minimize(self):
         """Return minimal ChainComplex quasi-isomorphic to self.

@@ -248,9 +248,9 @@ class PosetMappingCylinder(PosetAbstract):
             return False
 
     def __iter__(self):
-        for el in self.codom:
+        for el in self.elements_codom():
             yield el
-        for el in self.dom:
+        for el in self.elements_dom():
             yield el
 
     def leq(self, a, b):
