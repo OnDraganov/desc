@@ -304,12 +304,12 @@ class ChainComplex:
 
         complex_max_degree = max(cone_complex.matrices)
         deg = degree+1
-        while cone_complex.matrices.get(deg, None) or deg<complex_max_degree:
+        while cone_complex.matrices.get(deg, None) or deg<complex_max_degree: # make exact in the dom-part of the poset cylinder
             for element in poset_cylinder.elements_dom():
                 cone_complex._make_exact(deg, element)
             deg+= 1
 
-        truncated_complex = ChainComplex(self.poset)
+        truncated_complex = ChainComplex(self.poset) # take only the (dom-part, dom-part) submatrices
         for deg, mat in sorted(cone_complex.matrices.items()):
             submat = mat.submatrix(
                 list(poset_cylinder.elements_dom()),
