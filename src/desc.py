@@ -273,6 +273,7 @@ class ChainComplex:
                 for deg, mat in sorted(self.matrices.items())
             } #copy the matrices
         max_non_zero_degree = max(truncated_complex.matrices.keys(), default=degree)
+        degree += 1
         while truncated_complex.matrices.get(degree, None) or degree <= max_non_zero_degree: # Make everything exact, starting at the cut-off degree
             for p in truncated_complex.poset:
                 truncated_complex._make_exact(degree, p)
@@ -285,6 +286,7 @@ class ChainComplex:
 
     def truncate_from_left(self, degree, minimize=True):
         """Return the truncation of the complex from the left"""
+        degree = degree - 1
         poset_cylinder = PosetMappingCylinder(PosetMapIdentity(self.poset))
         cone_complex = ChainComplex(poset_cylinder)
         cone_complex.matrices = { #copy matrices starting with degree d to the top of the cylinder
@@ -309,21 +311,35 @@ class ChainComplex:
                 cone_complex._make_exact(deg, element)
             deg+= 1
 
-        truncated_complex = ChainComplex(self.poset) # take only the (dom-part, dom-part) submatrices
+        truncated_complex = ChainComplex(self.poset)  # take only the (dom-part, dom-part) submatrices
         for deg, mat in sorted(cone_complex.matrices.items()):
             submat = mat.submatrix(
                 list(poset_cylinder.elements_dom()),
                 relabel=poset_cylinder.relabel_cylinder_to_dom,
                 poset=truncated_complex.poset)
             if submat:
-                truncated_complex.matrices[deg-1] = submat
+                truncated_complex.matrices[deg - 1] = submat
 
-        if minimize: # we might get minimal already because of the construction -- should check the argument for why pullback is minimal
+        if minimize:  # we might get minimal already because of the construction -- should check the argument for why pullback is minimal
             return truncated_complex.minimize()
         else:
             return truncated_complex
 
+    def cohomology_sheaf(self,degree):
+        cohomology_sheaf = self.truncate_from_right(degree).truncate_from_left(degree)
+        return cohomology_sheaf
 
+
+
+    def stalk(self,element):
+        inc = PosetMapInclusion({element}, self.poset)
+        stalk_complex = self.pullback(inc)
+        return stalk_complex
+
+    def proper_stalk(self,element):
+        inc = PosetMapInclusion({element}, self.poset)
+        stalk_complex = self.proper_pullback(inc)
+        return stalk_complex
 
     def minimize(self):
         """Return minimal ChainComplex quasi-isomorphic to self.
